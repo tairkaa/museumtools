@@ -1,19 +1,58 @@
 # museumtools
-Tools for cpu museum
-# 1. extract_pdf_images.py
-Requirements:
-'''
-pip install pymupdf pillow
-'''
 
-Input: pdf files with N pages
-Output: small and big photos in dirs by pdf name
-Example:
->input
-L12345.pdf with 2 pages (each page contain 1 photo)
-<output
-small/L12345/0.jpg
-small/L12345/1.jpg
-big/L12345/0.jpg
-big/L12345/1.jpg
+Набор утилит для работы с PDF-файлами и изображениями в CPU Museum-проекте.
+
+## 1. extract\_pdf\_images.py
+
+Конвертирует страницы PDF в изображения двух размеров:
+
+* **big/** — высокое разрешение (DPI 300)
+* **small/** — пониженное разрешение (DPI 100) и сжатие JPEG
+
+### Требования
+
+```bash
+pip install pymupdf pillow
+```
+
+### Структура проекта
+
+```
+newphotos/                # Папка с входными PDF
+extract_pdf_images.py     # Скрипт для конвертации
+big/                      # Выходные большие изображения
+small/                    # Выходные маленькие изображения
+```
+
+### Использование
+
+1. Скопируйте PDF-файлы в папку `newphotos/`.
+2. Запустите скрипт:
+
+   ```bash
+   python extract_pdf_images.py
+   ```
+3. По окончании обработки появятся две папки:
+
+   ```text
+   big/<имя_файла>/<номер>.jpg
+   small/<имя_файла>/<номер>.jpg
+   ```
+
+#### Пример
+
+* **Вход**: `newphotos/L12345.pdf` (2 страницы)
+* **Выход**:
+
+  ```text
+  small/L12345/0.jpg
+  small/L12345/1.jpg
+  big/L12345/0.jpg
+  big/L12345/1.jpg
+  ```
+
+---
+
+Дополнительные утилиты будут добавляться по мере развития проекта.
+
 
