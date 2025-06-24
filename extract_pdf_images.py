@@ -2,12 +2,13 @@ import fitz
 import os
 from PIL import Image
 
-INPUT_DIR = "newphotos"   # Папка с PDF
-BIG_BASE = "big"         # Папка для больших изображений
-SMALL_BASE = "small"     # Папка для маленьких изображений
-DPI_BIG = 300             # Разрешение для больших изображений
-DPI_SMALL = 100           # Разрешение для маленьких изображений
-SMALL_QUALITY = 75        # Качество JPEG для маленьких изображений (0-100)
+INPUT_DIR = "newphotos"           # Папка с PDF
+BIG_BASE = "big"                  # Папка для больших изображений
+SMALL_BASE = "small"              # Папка для маленьких изображений
+DPI_BIG = 300                     # Разрешение для больших изображений
+DPI_SMALL = 100                   # Черновое разрешение для малых (до ресайза)
+SMALL_QUALITY = 75                # Качество JPEG для маленьких изображений (0-100)
+MAX_SMALL_SIDE = 512              # Максимальный размер большей стороны малых изображений (px)
 
 
 def ensure_dir(path):
@@ -15,13 +16,24 @@ def ensure_dir(path):
         os.makedirs(path)
 
 
-def save_pixmap_with_quality(pix, path, quality=75):
+def save_small_pixmap(pix, path, max_side=MAX_SMALL_SIDE, quality=SMALL_QUALITY):
     mode = "RGB"
     if pix.alpha:
         mode = "RGBA"
     img = Image.frombytes(mode, [pix.width, pix.height], pix.samples)
     if mode == "RGBA":
         img = img.convert("RGB")
+
+    w, h = img.size
+    if max(w, h) > max_side:
+        if w >= h:
+            new_w = max_side
+            new_h = int(h * max_side / w)
+        else:
+            new_h = max_side
+            new_w = int(w * max_side / h)
+        img = img.resize((new_w, new_h), Image.LANCZOS)
+
     img.save(path, format='JPEG', quality=quality)
 
 
@@ -34,8 +46,8 @@ def process_pdf(pdf_path):
     ensure_dir(big_dir)
     ensure_dir(small_dir)
 
-    mat_big = fitz.Matrix(DPI_BIG/72, DPI_BIG/72)
-    mat_small = fitz.Matrix(DPI_SMALL/72, DPI_SMALL/72)
+    mat_big = fitz.Matrix(DPI_BIG / 72, DPI_BIG / 72)
+    mat_small = fitz.Matrix(DPI_SMALL / 72, DPI_SMALL / 72)
 
     for i, page in enumerate(doc):
         pix_big = page.get_pixmap(matrix=mat_big)
@@ -44,7 +56,7 @@ def process_pdf(pdf_path):
 
         pix_small = page.get_pixmap(matrix=mat_small)
         small_path = os.path.join(small_dir, f"{i}.jpg")
-        save_pixmap_with_quality(pix_small, small_path, quality=SMALL_QUALITY)
+        save_small_pixmap(pix_small, small_path)
 
     doc.close()
 
@@ -58,6 +70,7 @@ def main():
             pdf_path = os.path.join(INPUT_DIR, fname)
             print(f"Обработка {fname}...")
             process_pdf(pdf_path)
+
     print("Готово!")
 
 
